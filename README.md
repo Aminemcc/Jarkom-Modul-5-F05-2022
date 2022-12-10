@@ -55,9 +55,22 @@ Untuk CIDR, tabel IP, dll dapat diakses di sheet berikut :
 
 <image src="images/topologi.jpg"><br>
 
-### IP Setiap Devices
+### Labelling
 
-<image src="images/ip.jpg"><br>
+<image src="images/label.jpg"><br>
+
+### CIDR
+
+<image src="images/cidr.jpg"><br>
+
+### NID
+
+<image src="images/nid.jpg"><br>
+
+### Network Configuration
+
+
+### Routing
 
 ### Nomor 1
 
@@ -110,6 +123,8 @@ iptables -A FORWARD -d 10.31.4.131 -i eth0 -p udp --dport 80 -j DROP
 4. -p [tcp/udp/...] : protocol tcp / udp / lainnya
 5. --dport 80 : dengan destination port 80
 6. -j DROP : lakukan drop paket
+
+Hati-hati karena koneksi yang berasal dari Eden & Wise tidak akan bisa mengakses internet semisal untuk download package, dll yang menggunakan protokol tcp & udp
 
 ### Nomor 3
 
