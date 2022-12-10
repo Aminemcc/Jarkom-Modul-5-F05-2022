@@ -74,8 +74,126 @@ Disini akan digunakan CIDR karena routing lebih simpel <br>
 
 ### Network Configuration
 
+Network configuration dapat diatur dengan klik kanan pada suatu node di GNS atau langsung edit file <br>
+"/etc/network/interfaces".<br>
+Jangan lupa di restart setelah mengatur network configuration
 
+Jika eth0 nya static, jangan lupa edit file "/etc/resolv.conf" <br>
+```
+echo 'nameserver 192.168.122.1' > /etc/resolv.conf
+```
+Strix <br>
+```
+auto eth0
+iface eth0 inet static
+    address 192.168.122.2
+    netmask 255.255.255.252
 
+#Ostania
+auto eth1
+iface eth1 inet static
+	address 10.31.20.1
+	netmask 255.255.255.252
+
+#Westalis
+auto eth2
+iface eth2 inet static
+    address 10.31.8.1
+    netmask 255.255.255.252
+```
+Ostania<br>
+```
+#Strix
+auto eth0
+iface eth0 inet static
+	address 10.31.20.2
+	netmask 255.255.255.252
+
+#Blackbell(255host)
+auto eth1
+iface eth1 inet static
+	address 10.31.16.1
+	netmask 255.255.254.0
+
+#Briar(200host)
+auto eth2
+iface eth2 inet static
+	address 10.31.18.1
+	netmask 255.255.255.0
+
+#Garden & SSS
+auto eth3
+iface eth3 inet static
+	address 10.31.19.1
+	netmask 255.255.255.248
+```
+Westalis<br>
+```
+#Strix
+auto eth0
+iface eth0 inet static
+	address 10.31.8.2
+	netmask 255.255.255.252
+
+#Desmond(700host)
+auto eth1
+iface eth1 inet static
+	address 10.31.0.1
+	netmask 255.255.252.0
+
+#Forger(62host)
+auto eth2
+iface eth2 inet static
+	address 10.31.4.1
+	netmask 255.255.255.128
+
+#Eden & Wise
+auto eth3
+iface eth3 inet static
+	address 10.31.4.129
+	netmask 255.255.255.248
+```
+Blackbell, Briar, Desmond, dan Forger <br>
+```
+auto eth0
+iface eth0 inet dhcp
+```
+Garden <br>
+```
+#Ostania
+auto eth0
+iface eth0 inet static
+	address 10.31.19.2
+	netmask 255.255.255.248
+	gateway 10.31.19.1
+```
+SSS <br>
+```
+#Ostania
+auto eth0
+iface eth0 inet static
+	address 10.31.19.3
+	netmask 255.255.255.248
+	gateway 10.31.19.1
+```
+Eden <br>
+```
+#Westalis
+auto eth0
+iface eth0 inet static
+    address 10.31.4.131
+    netmask 255.255.255.248
+    gateway 10.31.4.129
+```
+Wise<br>
+```
+#Westalis
+auto eth0
+iface eth0 inet static
+    address 10.31.4.130
+    netmask 255.255.255.248
+    gateway 10.31.4.129
+```
 ### Routing
 
 Strix <br>
@@ -102,6 +220,137 @@ Note : <br>
 1. Algoritma routing mendahulukan Subnet dengan range lebih kecil
 2. 0.0.0.0/0 : Semua IP dari 0.0.0.0 - 255.255.255.255
 
+#### Other
+
+Ostania : DHCP Relay<br>
+```
+apt-get update
+apt-get install isc-dhcp-relay -y
+
+#10.31.4.130 = WISE
+echo '
+SERVERS="10.31.4.130"
+INTERFACES="eth0 eth1 eth2 eth3"
+OPTIONS=
+' > /etc/default/isc-dhcp-relay
+
+echo "
+net.ipv4.ip_forward=1
+" > /etc/sysctl.conf
+
+service isc-dhcp-relay restart
+```
+Westalis : DHCP Relay<br>
+```
+apt-get update
+apt-get install isc-dhcp-relay -y
+
+#10.31.4.130 = WISE
+echo '
+SERVERS="10.31.4.130"
+INTERFACES="eth0 eth1 eth2 eth3"
+OPTIONS=
+' > /etc/default/isc-dhcp-relay
+
+echo "
+net.ipv4.ip_forward=1
+" > /etc/sysctl.conf
+
+service isc-dhcp-relay restart
+```
+Wise : DHCP Server<br>
+```
+apt-get update
+apt-get install isc-dhcp-server -y
+
+echo 'INTERFACES="eth0"' > /etc/default/isc-dhcp-server
+
+#WISE / EDEN
+echo '
+subnet 10.31.4.128 netmask 255.255.255.248 {   
+}
+' > /etc/dhcp/dhcpd.conf
+
+#Forger
+echo '
+subnet 10.31.4.0 netmask 255.255.255.128 {
+    range 10.31.4.2 10.31.4.63;
+    option routers 10.31.4.1;
+    option broadcast-address 10.31.4.127;
+    option domain-name-servers 10.31.4.131;
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+' >> /etc/dhcp/dhcpd.conf
+
+#Desmond
+echo '
+subnet 10.31.0.0 netmask 255.255.252.0 {
+    range 10.31.0.2 10.31.2.189;
+    option routers 10.31.0.1;
+    option broadcast-address 10.31.3.255;
+    option domain-name-servers 10.31.4.131;
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+' >> /etc/dhcp/dhcpd.conf
+
+#Blackbell
+echo '
+subnet 10.31.16.0 netmask 255.255.254.0 {
+    range 10.31.16.2 10.31.17.1;
+    option routers 10.31.16.1;
+    option broadcast-address 10.31.17.255;
+    option domain-name-servers 10.31.4.131;
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+' >> /etc/dhcp/dhcpd.conf
+
+#Briar
+echo '
+subnet 10.31.18.0 netmask 255.255.255.0 {
+    range 10.31.18.2 10.31.18.201;
+    option routers 10.31.18.1;
+    option broadcast-address 10.31.18.255;
+    option domain-name-servers 10.31.4.131;
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+' >> /etc/dhcp/dhcpd.conf
+
+#Garden & SSS
+echo '
+subnet 10.31.19.0 netmask 255.255.255.248 {
+}
+' >> /etc/dhcp/dhcpd.conf
+
+service isc-dhcp-server restart
+```
+ada subnet yang dibiarkan kosong karena pada DHCP Relay kita mention interface nya, tetapi kita tidak membutuhkannya untuk menjadi dynamic IP, sehingga kita kosongin saja agar tidak error DHCP Server-nya, mungkin bisa dicoba-coba sendiri untuk lebih lanjut.
+
+Eden : DNS Server<br>
+```
+apt-get update
+apt-get install bind9 -y
+
+echo '
+options {
+        directory "/var/cache/bind";
+        forwarders {
+                192.168.122.1;
+        };
+        allow-query{any;};
+        auth-nxdomain no;
+        listen-on-v6 { any; };
+};
+' > /etc/bind/named.conf.options
+
+rndc reload
+service bind9 restart
+service bind9 status
+```
+DNS Server berguna agar file /etc/resolv.conf pada DHCP Client untuk otomatis mengarah ke Eden yang dimana Eden akan mengarahkan ke DNS Server NAT "192.168.122.1"
 ### Nomor 1
 
 Masquerade berarti otomatis mendapatkan IP dari interface sekarang, karena tidak boleh menggunakan MASQUERADE, maka ada 2 cara, yaitu dengan mengubah IP dari interface yang terhubung ke NAT menjadi static
