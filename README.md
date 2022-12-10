@@ -59,6 +59,11 @@ Untuk CIDR, tabel IP, dll dapat diakses di sheet berikut :
 
 <image src="images/label.jpg"><br>
 
+Jika VLSM dibutuhkan netmask /19, jika CIDR dapat dilihat pada section berikutnya <br>
+
+Disini akan digunakan CIDR karena routing lebih simpel <br>
+(banyak tetangga >= banyak konfigurasi routing) 
+
 ### CIDR
 
 <image src="images/cidr.jpg"><br>
@@ -70,7 +75,32 @@ Untuk CIDR, tabel IP, dll dapat diakses di sheet berikut :
 ### Network Configuration
 
 
+
 ### Routing
+
+Strix <br>
+```
+#Internet / NAT
+route add -net 0.0.0.0/0 netmask 0.0.0.0 gw 192.168.122.1
+#Westalis
+route add -net 10.31.0.0 netmask 255.255.240.0 gw 10.31.8.2
+#Ostania
+route add -net 10.31.16.0 netmask 255.255.248.0 gw 10.31.20.2
+```
+Ostania <br>
+```
+#Strix
+route add -net 0.0.0.0 netmask 0.0.0.0 gw 10.31.20.1
+```
+Westalis <br>
+```
+#Strix
+route add -net 0.0.0.0 netmask 0.0.0.0 gw 10.31.8.1
+```
+
+Note : <br>
+1. Algoritma routing mendahulukan Subnet dengan range lebih kecil
+2. 0.0.0.0/0 : Semua IP dari 0.0.0.0 - 255.255.255.255
 
 ### Nomor 1
 
